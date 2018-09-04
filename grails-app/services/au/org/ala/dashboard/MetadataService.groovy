@@ -37,17 +37,17 @@ class MetadataService {
             basisOfRecord           : getBasisOfRecord(),
             mostRecorded            : getMostRecordedSpecies('all'),
             totalRecords            : getTotalAndDuplicates(),
-            collections             : getCollectionsByCategory(),
+            collections             : getCollectionsByCategory(), //in json
             datasets                : getDatasets(),
             dataProviders           : getDataProviders(),
             institutions            : getInstitutions(),
-            taxaCounts              : getTaxaCounts(),
-            identifyLifeCounts      : getIdentifyLifeCounts(),
-            bhlCounts               : getBHLCounts(),
-            boldCounts              : getBoldCounts(),
+            taxaCounts              : getTaxaCounts(), //in json
+            identifyLifeCounts      : getIdentifyLifeCounts(), //in json
+//            bhlCounts               : getBHLCounts(),  //RR removed for NBN
+            boldCounts              : getBoldCounts(), //in json
             typeCounts              : getTypeStats(),
             dateStats               : getDateStats(),
-            volunteerPortalCounts   : getVolunteerStats(),
+//            volunteerPortalCounts   : getVolunteerStats(),  //RR removed for NBN
             spatialLayers           : getSpatialLayers(),
             stateConservation       : getSpeciesByConservationStatus(),
             loggerTotals            : getLoggerTotals(),
@@ -68,9 +68,11 @@ class MetadataService {
      * @return map with counts and any errors - [error: <errors>, total: <count>, duplicates: <count>]
      */
     def getTotalAndDuplicates() {
+        log.debug 'in getTotalAndDuplicates'
         return cacheService.get('duplicate_status', {
             def raw = biocacheFacetCount('duplicate_status')
-            [error: raw.error, total: raw.total, duplicates: raw.facets.find({ it.facet == 'D' }).count]
+            def dupls_facet = raw.facets.find({ it.facet == 'D' })
+            [error: raw.error, total: raw.total, duplicates: (dupls_facet != null ? dupls_facet.count : 0) ]
         })
     }
 
@@ -79,6 +81,7 @@ class MetadataService {
      * @return map with facets and any errors - [error: <errors>, reason: <reason if error>, facets: <facet values>]
      */
     def getBasisOfRecord() {
+        log.debug 'in getBasisOfRecord'
         return cacheService.get('basis_of_record', {
             biocacheFacetCount('basis_of_record')
         })
@@ -89,6 +92,7 @@ class MetadataService {
      * @return map with facets and any errors - [error: <errors>, reason: <reason if error>, facets: <facet values>]
      */
     def getBiocacheFacet(String facetName) {
+        log.debug 'in getBiocacheFacet'
         return cacheService.get(facetName, {
             biocacheFacetCount(facetName)
         })
@@ -101,6 +105,7 @@ class MetadataService {
      * @return map with facets and any errors - [error: <errors>, reason: <reason if error>, facets: <facet values>]
      */
     def getMostRecordedSpecies(group) {
+        log.debug 'in getMostRecordedSpecies'
         cacheService.get('mostRecorded' + group, {
             // get the guids for the 6 most recorded species
             def fq = (group.toLowerCase() =~ 'all' ? '' : "&fq=species_group:${group}")
@@ -122,6 +127,7 @@ class MetadataService {
     }
 
     def getVolunteerStats() {
+        log.debug 'in getVolunteerStats'
         cacheService.get('volunteerStats', {
             // earliest record
             webService.getJson("${VOLUNTEER_URL}${Constants.WebServices.PARTIAL_URL_VOLUNTEER_STATS}")
@@ -134,6 +140,7 @@ class MetadataService {
      * @return map
      */
     Map getDateStats() {
+        log.debug 'in getDateStats'
         cacheService.get('dateStats', {
             def results = [:]
 
@@ -164,7 +171,8 @@ class MetadataService {
 
             // get counts by century
             [1600, 1700, 1800, 1900, 2000].each { century ->
-                def url = "${BIO_CACHE_URL}/ws/occurrences/search?q=*:*&pageSize=0&facet=off&fq=occurrence_year:[${century}-01-01T00:00:00Z%20TO%20${century + 99}-12-31T23:59:59Z]"
+                //def url = "${BIO_CACHE_URL}/ws/occurrences/search?q=*:*&pageSize=0&facet=off&fq=occurrence_year:[${century}-01-01T00:00:00Z%20TO%20${century + 99}-12-31T23:59:59Z]"
+                def url = "${BIO_CACHE_URL}/occurrences/search?q=*:*&pageSize=0&facet=off&fq=occurrence_year:[${century}-01-01T00:00:00Z%20TO%20${century + 99}-12-31T23:59:59Z]"
                 def c = webService.getJson(url)
                 results['c' + century] = c.totalRecords
             }
@@ -178,6 +186,7 @@ class MetadataService {
      * @return map
      */
     def getTypeStats = {
+        log.debug 'in getTypeStats'
         return cacheService.get('typeStats', {
 
             def results = [:]
@@ -210,6 +219,7 @@ class MetadataService {
      * @return a list of maps with the following format [decade: <value>, records: <value>, species: <value>]
      */
     List getSpeciesByDecade() {
+        log.debug 'in getSpeciesByDecade'
         return cacheService.get("speciesByDecade", {
 
             String baseUrl = "${BIO_CACHE_URL}${Constants.WebServices.PARTIAL_URL_SPECIES_BY_DECADE}"
@@ -241,6 +251,7 @@ class MetadataService {
      * @return map with total and breakdown by type
      */
     def getDatasets() {
+        log.debug 'in getDatasets'
         return cacheService.get('datasets', {
             def action = "Datasets lookup"
             // look it up
@@ -285,6 +296,7 @@ class MetadataService {
      * @return map with total and breakdown by type, domain and classification1
      */
     def getSpatialLayers() {
+        log.debug 'in getSpatialLayers'
         return cacheService.get('layers', {
             def action = "Spatial layers lookup"
             log.info "looking up spatial layers"
@@ -324,6 +336,7 @@ class MetadataService {
     }
 
     def getSpeciesByConservationStatus() {
+        log.debug 'in getSpeciesByConservationStatus'
         return cacheService.get('speciesByConservationStatus', {
 
             def baseUrl = "${BIO_CACHE_URL}${Constants.WebServices.PARTIAL_URL_SPECIES_BY_CONSERVATION_STATUS}"
@@ -332,16 +345,21 @@ class MetadataService {
             def data = []
             ['Endangered', 'Near Threatened', 'Least Concern/Unknown', 'Listed under FFG Act', 'Extinct', 'Parent Species (Unofficial)'].each {
                 def url = baseUrl + '"' + URLEncoder.encode(it) + '"'
-                def json = new URL(url).text
+                /* def json = new URL(url).text
                 def result = JSON.parse(json)
                 def totals = result.find { it.name == 'ALL_SPECIES' }
-                data << [status: it, records: totals.count, species: totals.speciesCount]
+                data << [status: it, records: totals.count, species: totals.speciesCount] */
+                //RR this is broken svr 500 error on NBN Atlas - no states defined?
+                //TODO fix properly
+                data << [status: it, records: 0, species: 0]
+
             }
             return data
         })
     }
 
     def getDataProviders() {
+        log.debug 'in getDataProviders'
         return cacheService.get('dataProviders', {
 
             // raw list by uid
@@ -370,6 +388,7 @@ class MetadataService {
     }
 
     def getInstitutions() {
+        log.debug 'in getInstitutions'
         return cacheService.get('institutions', {
 
             // raw list by uid
@@ -405,10 +424,11 @@ class MetadataService {
      * @return map with facets and any errors - [error: <errors>, reason: <reason if error>, facets: <facet values>]
      */
     def biocacheFacetCount(facetName, query = '*:*') {
-
+        log.debug 'in biocacheFacetCount'
         def facets = []
         def resp = null
-        String url = "${BIO_CACHE_URL}/ws/occurrences/search?q=${query}&pageSize=0&fsort=count&facets=${facetName}"
+        //String url = "${BIO_CACHE_URL}/ws/occurrences/search?q=${query}&pageSize=0&fsort=count&facets=${facetName}"
+        String url = "${BIO_CACHE_URL}/occurrences/search?q=${query}&pageSize=0&fsort=count&facets=${facetName}"
 
         log.info "looking up " + facetName + ", URL: " + url
 
@@ -452,9 +472,11 @@ class MetadataService {
      * @return metadata for each taxon
      */
     def bieBulkLookup(list) {
+        log.debug 'in bieBulkLookup'
         def url = BIE_URL
         def data = webService.doPost(url,
-                "/ws/species/guids/bulklookup.json", "", (list as JSON).toString())
+                //"/ws/species/guids/bulklookup.json", "", (list as JSON).toString())
+                "/species/guids/bulklookup.json", "", (list as JSON).toString())
         //println "returned from doPost ${data.resp}"
         def results = [:]
         if (!data.error) {
@@ -480,6 +502,7 @@ class MetadataService {
      * @return map
      */
     def getLoggerTotals() {
+        log.debug 'in getLoggerTotals'
         cacheService.get('loggerTotals', {
             def results = [:]
 
@@ -496,6 +519,7 @@ class MetadataService {
     }
 
     def getLoggerReasonBreakdown() {
+        log.debug 'in getLoggerReasonBreakdown'
         cacheService.get('loggerReasonBreakdown', {
             def results = []
 
@@ -506,8 +530,7 @@ class MetadataService {
             def sortedBreakdowns = allTimeReasonBreakdown.reasonBreakdown.sort { -it.value["events"] }
 
             //but then place "Other", "Unclassified", "Testing" at the bottom & combined
-            def other = sortedBreakdowns.get("other")
-
+            def other = ['events': 0, 'records': 0] //sortedBreakdowns.get("other") //RR no such category for NBN...
 
             def unclassifiedCount = sortedBreakdowns.get("unclassified")
             def testingCount = sortedBreakdowns.get("testing")
@@ -546,6 +569,7 @@ class MetadataService {
     }
 
     def getLoggerSourceBreakdown() {
+        log.debug 'in getLoggerSourceBreakdown'
         cacheService.get('loggerSourceBreakdown', {
             def results = []
 
@@ -596,6 +620,7 @@ class MetadataService {
     }
 
     def getLoggerReasonTemporalBreakdown() {
+        log.debug 'in getLoggerReasonTemporalBreakdown'
         cacheService.get('loggerReasonBreakdown', {
             def results = []
             // earliest record
@@ -605,6 +630,7 @@ class MetadataService {
     }
 
     def getLoggerEmailBreakdown() {
+        log.debug 'in getLoggerEmailBreakdown'
         cacheService.get('loggerEmailBreakdown', {
             def results = [:]
 
@@ -621,6 +647,7 @@ class MetadataService {
     }
 
     def getImagesBreakdown() {
+        log.debug 'in getImagesBreakdown'
         cacheService.get('imagesBreakdown', {
 
             def results = [:]
@@ -635,7 +662,7 @@ class MetadataService {
             results.put("speciesWithImages", speciesWithImages)
             results.put("subspeciesWithImages", subspeciesWithImages)
 
-            def vpResources = webService.getJson("${COLLECTORY_URL}/ws/dataHub/dh6").memberDataResources
+            def vpResources //= webService.getJson("${COLLECTORY_URL}/ws/dataHub/dh6").memberDataResources  //RR broken on NBN Atlas - no data hubs
 //            log.debug "vpResources = ${vpResources}"
             def resourcesQuery = ""
 
@@ -653,12 +680,13 @@ class MetadataService {
             def taxaVPCount = webService.getJson("${BIO_CACHE_URL}${Constants.WebServices.PARTIAL_URL_TAXA_VP_COUNT}${resourcesQuery}")[0].count
             results.put("taxaWithImagesFromVolunteerPortal", taxaVPCount)
 
-            def taxaCSCount = webService.getJson("${BIO_CACHE_URL}${Constants.WebServices.PARTIAL_URL_TAXA_CS_COUNT}")[0].count
+            def taxaCSCount = webService.getJson("${BIO_CACHE_URL}${Constants.WebServices.PARTIAL_URL_TAXA_CS_COUNT}")[0]?.count ?: 0 //RR empty on NBN
             results.put("taxaWithImagesFromCS", taxaCSCount)
 
             def imageTotal = webService.getJson("${IMAGES_URL}${Constants.WebServices.PARTIAL_URL_IMAGE_TOTAL}").imageCount
             results.put("imageTotal", imageTotal)
 
+            log.info 'leaving getImagesBreakdown'
             return results
         })
     }
@@ -668,6 +696,7 @@ class MetadataService {
      * @return [[label: <value>, count: <value<], ...]
      */
     List getStateAndTerritoryRecords() {
+        log.debug 'in getStateAndTerritoryRecords'
         return cacheService.get('state_and_territory_records', {
             def results = webService.getJson("${BIO_CACHE_URL}${Constants.WebServices.PARTIAL_URL_STATE_TERRITORY_FACETED_RESULTS}")
             ((results.facetResults.find {it.fieldName == 'state'}).fieldResult as ArrayList)
@@ -680,6 +709,8 @@ class MetadataService {
      * @return [[label: <value>, count: <value<], ...]
      */
     List getRecordsByLifeForm() {
+        log.debug 'in getRecordsByLifeForm'
+        log.debug 'in getRecordsByLifeForm'
         return cacheService.get('records_by_life_form', {
             def results = webService.getJson("${BIO_CACHE_URL}${Constants.WebServices.PARTIAL_URL_RECORDS_BY_LIFE_FORM}")
 
@@ -698,6 +729,7 @@ class MetadataService {
      * @return [stat1: <value>, stat2: <value>, ...]
      */
     Map getBHLCounts() {
+        log.debug 'in getBHLCounts'
         return cacheService.get('bhlCounts', {
             def stats = [:]
             try {
@@ -732,6 +764,7 @@ class MetadataService {
      * @return CountsDTO
      */
     CountsDTO getUserCounts() {
+        log.debug 'in getUserCounts'
         def userCounts = cacheService.get('user_stats', {
             def results = webService.getJson("${USERDETAILS_URL}/ws/getUserStats")
             results
@@ -745,8 +778,10 @@ class MetadataService {
      * @return CountsDTO
      */
     CountsDTO getSpeciesCounts() {
+        log.debug 'in getSpeciesCounts'
         def speciesCounts = cacheService.get('species_count', {
-            JSONArray results = webService.getJson("${BIO_CACHE_URL}/ws/occurrence/facets?q=country:Australia+OR+cl21:*&facets=species&fsort=count&flimit=0")
+            //JSONArray results = webService.getJson("${BIO_CACHE_URL}/ws/occurrence/facets?q=country:Australia+OR+cl21:*&facets=species&fsort=count&flimit=0")
+            JSONArray results = webService.getJson("${BIO_CACHE_URL}/occurrence/facets?q=country:Australia+OR+cl21:*&facets=species&fsort=count&flimit=0")
             results?.get(0)?.count
         })
         new CountsDTO(count: speciesCounts)
@@ -758,6 +793,7 @@ class MetadataService {
      * @return CountsDTO
      */
     CountsDTO getRecordCounts() {
+        log.debug 'in getRecordCounts'
         def recordCountNow = cacheService.get('record_count_now', {
             def results = webService.getJson("${BIO_CACHE_URL}${Constants.WebServices.PARTIAL_URL_COUNT_RECORDS}")
             results?.totalRecords
@@ -775,6 +811,7 @@ class MetadataService {
      * @return CountsDTO
      */
     CountsDTO getDatasetCounts() {
+        log.debug 'in getDatasetCounts'
         def datasetCountNow = cacheService.get('dataset_count_now', {
             def results = webService.getJson("${COLLECTORY_URL}${Constants.WebServices.PARTIAL_URL_COUNT_DATASETS_BY_TYPE}")
             results?.total
@@ -792,6 +829,7 @@ class MetadataService {
      * @return CountsDTO
      */
     CountsDTO getDownloadCounts() {
+        log.debug 'in getDownloadCounts'
         def byReason = cacheService.get('downloads_count', {
             def results = webService.getJson("${LOGGER_URL}${Constants.WebServices.PARTIAL_URL_LOGGER_REASON_BREAKDOWN}")
             results?.all

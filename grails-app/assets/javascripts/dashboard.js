@@ -30,7 +30,8 @@ var dashboard = {
             /* base url of the collectory */
             collectionsUrl: dashboard.urls.collections,
             /* base url of the biocache ws*/
-            biocacheServicesUrl: dashboard.urls.biocache + '/ws/',
+            //biocacheServicesUrl: dashboard.urls.biocache + '/ws/',
+            biocacheServicesUrl: dashboard.urls.biocache + '/',
             /* base url of the biocache webapp*/
             biocacheWebappUrl: dashboard.urls.biocache,
             serverUrl: dashboard.urls.app,
@@ -253,7 +254,8 @@ var dashboard = {
         $('#datasets-topic td:first-child:not(#description)').click(function () {
             var type = $(this).attr('id');
             if (type == 'dataAvailable') {
-                document.location.href = dashboard.urls.biocache + "/ws/occurrence/facets?q=*:*&facets=data_resource_uid&flimit=0";
+                //document.location.href = dashboard.urls.biocache + "/ws/occurrence/facets?q=*:*&facets=data_resource_uid&flimit=0";
+                document.location.href = dashboard.urls.biocache + "/occurrence/facets?q=*:*&facets=data_resource_uid&flimit=0";
             } else if (type == 'institutions') {
                 document.location.href = dashboard.urls.collections + "/ws/institution/count";
             } else if (type == 'collections') {

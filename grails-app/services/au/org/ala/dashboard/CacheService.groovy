@@ -24,10 +24,12 @@ class CacheService {
      * @param maxAgeInDays the maximum age of the cached results
      * @return the results
      */
-    def get(String key, Closure source, int maxAgeInDays = 1) {
+    def get(String key, Closure source, int maxAgeInDays = 5) {
         def cached = cache[key]
         def results
-
+        //log.info "max age = ${maxAgeInDays}" // RR was 1
+        log.info "cache[${key}] = ${cached}"
+        //refreshCache(key, cache, source) // RR to force-populate cache
         if (cached?.resp && !(new Date().after(cached?.time + maxAgeInDays))) {
             log.info "using cache for ${key}"
             results = cached.resp
@@ -46,16 +48,19 @@ class CacheService {
             // We return the current cached value which probably is not the new one for the current request
             results = cached.resp
         } else {
+            log.info "using source to get data: ${source}"
             try {
-                log.debug "retrieving " + key
+                log.info "retrieving " + key
                 results = source.call()
                 if (!results || (results instanceof Map && results.errorCode)) {
                     clear key
                 } else {
                     cache.put key, [resp: results, time: new Date()]
+                    log.info "cached ${key} -> ${results}"
                 }
             } catch (e) {
-                log.error "There was a problem retrieving the dashboard data for key ${key}: ${e.message}"
+                log.info '(in get)'
+                log.info "There was a problem retrieving the dashboard data for key ${key}: ${e.message}"
                 clear key
             }
         }
@@ -78,27 +83,30 @@ class CacheService {
      * @return
      */
     def loadStaticCacheFromFile(key) {
-        log.info 'loading static data from file'
+        log.info "loading static data from file for ${key}"
+
         def json = new File(grailsApplication.config.dashboard.data.file as String).text
         if (json) {
             JSON.parse(json).each { k,v ->
                 cache.put k, [resp: v, time: new Date()]
+                log.info "cached key = ${k}, value = ${v}"
             }
         }
         return cache[key]?.resp
     }
 
     def refreshCache(key, cache, source) {
-        log.debug("Adding ${key} key to cache")
+        log.info("Adding ${key} key to cache")
         try {
             def value = source.call()
             if (!value || (value instanceof Map && value.errorCode)) {
                 clear key
             } else {
                 cache.put(key, [resp: value, time: new Date()])
+                log.info "I have cached ${key} = ${value}"
             }
         } catch (e) {
-            log.error "There was a problem retrieving the dashboard data for key ${key}: ${e.message}"
+            log.info "There was a problem retrieving the dashboard data for key ${key}: ${e.message}"
         }
     }
 }

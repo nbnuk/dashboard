@@ -4,7 +4,6 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <link href="${grailsApplication.config.skin.favicon}" rel="shortcut icon"  type="image/x-icon"/>
     <meta name="layout" content="ala-main"/>
     <meta name="breadcrumb" content="Dashboard"/>
     <title>Dashboard | NBN Atlas</title>

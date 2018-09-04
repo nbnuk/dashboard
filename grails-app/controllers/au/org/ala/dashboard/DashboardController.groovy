@@ -77,13 +77,14 @@ class DashboardController {
         render view: 'panels/barcodeOfLifePanel', model: [boldCounts: metadataService.getBoldCounts()]
     }
 
-    def bhlPanel = {
-        render view: 'panels/bhlPanel', model: [bhlCounts: metadataService.getBHLCounts()]
-    }
+    //RR removed
+    //def bhlPanel = {
+    //    render view: 'panels/bhlPanel', model: [bhlCounts: metadataService.getBHLCounts()]
+    //}
 
-    def volunteerPortalPanel = {
-        render view: 'panels/volunteerPortalPanel', model: [volunteerPortalCounts: metadataService.getVolunteerStats()]
-    }
+    //def volunteerPortalPanel = {
+    //    render view: 'panels/volunteerPortalPanel', model: [volunteerPortalCounts: metadataService.getVolunteerStats()]
+    //}
 
     def conservationStatusPanel = {
         render view: 'panels/conservationStatusPanel', model: [stateConservation: metadataService.getSpeciesByConservationStatus()]
@@ -93,9 +94,10 @@ class DashboardController {
         render view: 'panels/recordsByDataProviderPanel', model: [dataProviders: metadataService.getDataProviders()]
     }
 
-    def recordsByInstitutionPanel = {
-        render view: 'panels/recordsByInstitutionPanel', model: [institutions: metadataService.getInstitutions()]
-    }
+    //RR removed
+    //def recordsByInstitutionPanel = {
+    //    render view: 'panels/recordsByInstitutionPanel', model: [institutions: metadataService.getInstitutions()]
+    //}
 
     def recordsByLifeFormPanel = {
         render view: 'panels/recordsByLifeFormPanel', model: [records: metadataService.getRecordsByLifeForm()]
@@ -219,7 +221,8 @@ class DashboardController {
         writeCsvFile('names', metadataService.getTaxaCounts(), [])
 
         // bhl counts
-        writeCsvFile('biodiversity-heritage-library', metadataService.getBHLCounts(), [])
+        //RR removed
+        //writeCsvFile('biodiversity-heritage-library', metadataService.getBHLCounts(), [])
 
         // identify life counts
         writeCsvFile('identify-life', metadataService.getIdentifyLifeCounts(), [])
@@ -228,12 +231,14 @@ class DashboardController {
         writeCsvFile('biodiversity-volunteer-portal', metadataService.get('volunteerPortalCounts'), [])
 
         /* zip files */
-        new AntBuilder().zip(destfile: '/data/dashboard/zip/dashboard.zip', basedir: '/data/dashboard/csv/',
-        includes: '**/*.csv')
+        //new AntBuilder().zip(destfile: '/data/dashboard/zip/dashboard.zip', basedir: '/data/dashboard/csv/', includes: '**/*.csv')
+        new AntBuilder().zip(destfile: './grails-app/data/dashboard/zip/dashboard.zip', basedir: './grails-app/data/dashboard/csv/', includes: '**/*.csv') //RR foce
+
 
         /* render zip */
         response.setHeader("Content-disposition", "attachment; filename=dashboard.zip");
-        byte[] zip = new File('/data/dashboard/zip/dashboard.zip').bytes
+        //byte[] zip = new File('/data/dashboard/zip/dashboard.zip').bytes
+        byte[] zip = new File('./grails-app/data/dashboard/zip/dashboard.zip').bytes //RR
         response.contentType = "application/zip"
         response.outputStream << zip
     }
@@ -294,8 +299,8 @@ class DashboardController {
                 datasets: metadataService.getDatasets(),
                 recordsByDataProvider:
                         metadataService.getDataProviders().collectEntries {[it.display, it.count]},
-                recordsByInstitution:
-                        metadataService.getInstitutions().collectEntries {[it.display, it.count]},
+                //recordsByInstitution: //RR removed
+                //        metadataService.getInstitutions().collectEntries {[it.display, it.count]},
                 recordsByDate: metadataService.getDateStats(),
                 recordsByState: facetCount('state'),
                 recordsByKingdom: facetCount('kingdom'),
@@ -305,8 +310,8 @@ class DashboardController {
                 spatialLayers: metadataService.getSpatialLayers(),
                 typeCounts: metadataService.getTypeStats(),
                 taxaCounts: metadataService.getTaxaCounts(),
-                bhlCounts: metadataService.getBHLCounts(),
-                volunteerPortalCounts: metadataService.getVolunteerStats(),
+                //bhlCounts: metadataService.getBHLCounts(), //RR removed
+                //volunteerPortalCounts: metadataService.getVolunteerStats(), //RR removed
                 occurrenceDownloadByReason: metadataService.getLoggerReasonBreakdown().collect {["Download Reason": it[0], "Events": it[1].trim(), "Records": it[2].trim()]}]
                 //volunteerPortalCounts: metadataService.get('volunteerPortalCounts'),
                 //identifyLifeCounts: metadataService.getIdentifyLifeCounts()]

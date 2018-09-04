@@ -99,7 +99,7 @@ endpoints:
 
 ---
 skin:
-    layout: "ala-main"
+    layout: "ala-styles" #"ala-main"
     fluidLayout: true
     orgNameLong: "National Biodiversity Network" #"Atlas of Living Australia"
     orgNameShort: "NBN" #"ALA"
