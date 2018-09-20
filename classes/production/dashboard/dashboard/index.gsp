@@ -45,6 +45,8 @@
 
         <g:include controller="dashboard" action="nslPanel"/>
 
+        <g:include controller="dashboard" action="recordsByIdentificationVerificationStatusPanel"/>
+
         <g:include controller="dashboard" action="spatialPanel"/>
 
         <g:include controller="dashboard" action="statePanel"/>

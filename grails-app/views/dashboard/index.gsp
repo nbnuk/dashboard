@@ -38,15 +38,21 @@
 
         <g:include controller="dashboard" action="datasetsPanel"/>
 
-        <g:include controller="dashboard" action="basisRecordsPanel"/>
+        %{--<g:include controller="dashboard" action="basisRecordsPanel"/>--}%
 
-        <g:include controller="dashboard" action="collectionPanel"/>
+        %{--<g:include controller="dashboard" action="collectionPanel"/>--}%
 
-        <g:include controller="dashboard" action="dateRecordsPanel"/>
+        %{--<g:include controller="dashboard" action="dateRecordsPanel"/>--}%
 
-        <g:include controller="dashboard" action="nslPanel"/>
+        <g:include controller="dashboard" action="identificationVerificationStatusPanel"/>
 
-        <g:include controller="dashboard" action="spatialPanel"/>
+        <g:include controller="dashboard" action="licencePanel"/>
+
+        <g:include controller="dashboard" action="coordinateUncertaintyPanel"/>
+
+        %{--<g:include controller="dashboard" action="nslPanel"/>--}%
+
+        %{--<g:include controller="dashboard" action="spatialPanel"/>--}%
 
         <g:include controller="dashboard" action="statePanel"/>
 
@@ -54,7 +60,7 @@
 
         <g:include controller="dashboard" action="mostRecordedSpeciesPanel"/>
 
-        <g:include controller="dashboard" action="typeSpecimensPanel"/>
+        %{--<g:include controller="dashboard" action="typeSpecimensPanel"/>--}%
 
         %{--<g:include controller="dashboard" action="barcodeOfLifePanel"/>--}%
 
@@ -62,13 +68,13 @@
 
         %{--<g:include controller="dashboard" action="volunteerPortalPanel"/>--}%
 
-        <g:include controller="dashboard" action="conservationStatusPanel"/>
+        %{--<g:include controller="dashboard" action="conservationStatusPanel"/>--}%
 
         <g:include controller="dashboard" action="recordsByDataProviderPanel"/>
 
         %{--<g:include controller="dashboard" action="recordsByInstitutionPanel"/>--}%
 
-        <g:include controller="dashboard" action="occurrenceTreePanel"/>
+        %{--<g:include controller="dashboard" action="occurrenceTreePanel"/>--}%
 
         <g:include controller="dashboard" action="recordsByLifeFormPanel"/>
 
@@ -80,34 +86,36 @@
 
         %{--<g:include controller="dashboard" action="downloadsBySourcePanel"/>--}%
 
-        <g:include controller="dashboard" action="downloadsByUserTypePanel"/>
+        %{--<g:include controller="dashboard" action="downloadsByUserTypePanel"/>--}%
 
-        <g:include controller="dashboard" action="speciesImagesPanel"/>
+        %{--<g:include controller="dashboard" action="speciesImagesPanel"/>--}%
 
-    </div>
+        <g:include controller="dashboard" action="userPanel"/>
+
+</div>
 </div>
 
 <asset:javascript src="application.js"/>
 
 <asset:script type="text/javascript">
-    var alaWsUrls = {
-        collections: '${grailsApplication.config.collectory.baseURL}',
-        biocache: '${grailsApplication.config.biocache.baseURL}',
-        bie: '${grailsApplication.config.bie.baseURL}',
-        app: '${request.contextPath}'
-    }
+var alaWsUrls = {
+collections: '${grailsApplication.config.collectory.baseURL}',
+biocache: '${grailsApplication.config.biocache.baseURL}',
+bie: '${grailsApplication.config.bie.baseURL}',
+app: '${request.contextPath}'
+}
 
-    <g:applyCodec encodeAs="none">
-    var panelInfo = ${panelInfo?:'{}'};
-    </g:applyCodec>
+<g:applyCodec encodeAs="none">
+var panelInfo = ${panelInfo?:'{}'};
+</g:applyCodec>
 
-    $(function() {
-        dashboard.init({
-            urls: alaWsUrls
-        });
+$(function() {
+dashboard.init({
+    urls: alaWsUrls
+});
 
-    $('#floatContainer > div > div.panel').matchHeight();
-    $.fn.matchHeight._maintainScroll = true;
+$('#floatContainer > div > div.panel').matchHeight();
+$.fn.matchHeight._maintainScroll = true;
 });
 </asset:script>
 </body>

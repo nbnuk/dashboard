@@ -34,4 +34,26 @@ class ChartsController {
 
         [columns: columns, data: data]
     }
+
+    def openAndSharedLicenceRecords() {
+        Map openAndSharedLicences = metadataService.getRecordsByLicenceType()
+        def columns = [['string', 'Licence'], ['number', 'Records']]
+        def data = [
+                ['Open', openAndSharedLicences.open],
+                ['Shared', openAndSharedLicences.shared]
+        ]
+
+        [columns: columns, data: data]
+    }
+
+    def openAndSharedLicenceDataResources() {
+        Map openAndSharedLicences = metadataService.getDataResourceByLicenceType()
+        def columns = [['string', 'Licence'], ['number', 'Data resources']]
+        def data = [
+                ['Open', openAndSharedLicences.open],
+                ['Shared', openAndSharedLicences.shared]
+        ]
+
+        [columns: columns, data: data]
+    }
 }

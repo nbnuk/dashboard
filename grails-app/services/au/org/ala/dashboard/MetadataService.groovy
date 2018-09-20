@@ -15,7 +15,7 @@ class MetadataService {
 
     def webService, cacheService, grailsApplication
 
-    String BIO_CACHE_URL, VOLUNTEER_URL, COLLECTORY_URL, SPATIAL_URL,BIE_URL, LOGGER_URL, IMAGES_URL, USERDETAILS_URL
+    String BIO_CACHE_URL, VOLUNTEER_URL, COLLECTORY_URL, SPATIAL_URL,BIE_URL, LOGGER_URL, IMAGES_URL, USERDETAILS_URL, RECORDS_URL
 
     @PostConstruct
     def init() {
@@ -27,6 +27,7 @@ class MetadataService {
         LOGGER_URL = grailsApplication.config.logger.baseURL
         IMAGES_URL = grailsApplication.config.images.baseURL
         USERDETAILS_URL = grailsApplication.config.userDetails.baseURL
+        RECORDS_URL = grailsApplication.config.records.baseURL
     }
 /**
      * Populates the model for the dashboard view
@@ -34,28 +35,29 @@ class MetadataService {
      */
     Map getDashboardModel() {
         [
-            basisOfRecord           : getBasisOfRecord(),
+//            basisOfRecord           : getBasisOfRecord(), //SR removed for NBN
             mostRecorded            : getMostRecordedSpecies('all'),
             totalRecords            : getTotalAndDuplicates(),
-            collections             : getCollectionsByCategory(), //in json
+ //           collections             : getCollectionsByCategory(), //in json
             datasets                : getDatasets(),
             dataProviders           : getDataProviders(),
-            institutions            : getInstitutions(),
+            identificationVerificationStatus: getIdentificationVerificationStatus(),
+//            institutions            : getInstitutions(), //SR removed for NBN
             taxaCounts              : getTaxaCounts(), //in json
             identifyLifeCounts      : getIdentifyLifeCounts(), //in json
 //            bhlCounts               : getBHLCounts(),  //RR removed for NBN
-            boldCounts              : getBoldCounts(), //in json
+//            boldCounts              : getBoldCounts(), //in json //SR removed for NBN
             typeCounts              : getTypeStats(),
             dateStats               : getDateStats(),
 //            volunteerPortalCounts   : getVolunteerStats(),  //RR removed for NBN
-            spatialLayers           : getSpatialLayers(),
-            stateConservation       : getSpeciesByConservationStatus(),
+//            spatialLayers           : getSpatialLayers(),   //SR removed for NBN
+//            stateConservation       : getSpeciesByConservationStatus(), //SR removed for NBN
             loggerTotals            : getLoggerTotals(),
             loggerReasonBreakdown   : getLoggerReasonBreakdown(),
 //            loggerSourceBreakdown   : getLoggerSourceBreakdown(),
             loggerEmailBreakdown    : getLoggerEmailBreakdown(),
             loggerTemporalBreakdown : getLoggerReasonTemporalBreakdown(),
-            imagesBreakdown         : getImagesBreakdown(),
+ //           imagesBreakdown         : getImagesBreakdown(), //SR removed for NBN
             panelInfo               : getPanelInfo() as JSON,
             stateAndTerritoryRecords: getStateAndTerritoryRecords(),
             recordsByLifeForm       : getRecordsByLifeForm()
@@ -86,6 +88,133 @@ class MetadataService {
             biocacheFacetCount('basis_of_record')
         })
     }
+
+    /**
+     * Uses a cached biocache lookup to return the counts for each identification verification status.
+     * @return map with facets and any errors - [error: <errors>, reason: <reason if error>, facets: <facet values>]
+     */
+    def getRecordsByIdentificationVerificationStatus() {
+        log.debug 'in getRecordsByIdentificationVerificationStatus'
+        return cacheService.get('identification_verification_status', {
+            biocacheFacetCount('identification_verification_status')
+        })
+    }
+
+    /**
+     * Uses a cached biocache lookup to return the record counts for each licence.
+     * @return map with count of shared and open licences
+     */
+    def getRecordsByLicenceType() {
+        log.debug 'in getRecordsByLicenceType'
+        return cacheService.get('recordsByLicense', {
+            def results = [:]
+
+            // get the licenses
+            def licences = biocacheFacetCount('license')
+            def sharedCount = 0
+
+            licences.facets.each {
+                if (it.facet == 'CC-BY-NC') {
+                    sharedCount = it.count
+                    results.shared = it.count
+                }
+            }
+            results.open = licences.total - sharedCount
+
+            return results
+        })
+
+    }
+
+    /**
+     * Uses a cached biocache lookup to return the data resource counts for each licence.
+     * @return map with counts for open and shared licences
+     */
+    def getDataResourceByLicenceType() {
+        log.debug 'in getDataResourceByLicenceType'
+        return cacheService.get('dataresourcesByLicense', {
+            def results = [:]
+            def resp = null
+
+            // get the licenses
+            String url = "${COLLECTORY_URL}${Constants.WebServices.PARTIAL_URL_COUNT_DATASETS_BY_LICENSE_TYPE}"
+
+            def conn = new URL(url).openConnection()
+            try {
+                conn.setConnectTimeout(5000)
+                conn.setReadTimeout(50000)
+                def json = conn.content.text
+                resp = JSON.parse(json)
+            } catch (SocketTimeoutException e) {
+                log.info "${action} timed out = ${e.toString()}"
+                return [error: "${action} timed out", reason: e.message]
+            } catch (Exception e) {
+                log.info "${action} failed = ${e.toString()}"
+                return [error: "${action} failed", reason: e.message]
+            }
+
+            def sharedCount = resp.groups["CC-BY-NC"]
+            def otherCount = resp.groups["other"]
+
+            results.shared = sharedCount
+            results.open = resp.total - sharedCount - otherCount
+
+            return results
+        })
+
+    }
+
+    /**
+     * Uses a cached biocache lookup to return the counts for each coordinate uncertainty.
+     * @return map with facets and any errors - [error: <errors>, reason: <reason if error>, facets: <facet values>]
+     */
+    def getRecordsByCoordinateUncertainty() {
+        log.debug 'in getRecordsByCoordinateUncertainty'
+        return cacheService.get('coordinate_uncertainty', {
+
+            def coordinateUncertanties = biocacheFacetCount('coordinate_uncertainty')
+            def results = ["1m":0,
+                           "10m":0,
+                           "100m":0,
+                           "1km":0,
+                           "2km":0,
+                           "10km":0,
+                           "100km":0]
+
+            coordinateUncertanties.facets.each {c ->
+                if(c.facet.isNumber()) {
+                    def resolution = c.facet as double
+                    switch (resolution.round()) {
+                        case {it < 2}:
+                            results["1m"] = results["1m"] + c.count
+                            break
+                        case {it < 11}:
+                            results["10m"] = results["10m"] + c.count
+                            break
+                        case { it < 101 }:
+                            results["100m"] = results["100m"] + c.count
+                            break
+                        case { it < 1001 }:
+                            results["1km"] = results["1km"] + c.count
+                            break
+                        case { it < 2001 }:
+                            results["2km"] = results["2km"] + c.count
+                            break
+                        case { it < 10001 }:
+                            results["10km"] = results["10km"] + c.count
+                            break
+                        case { it < 100001 }:
+                            results["100km"] = results["100km"] + c.count
+                            break
+                        default:
+                            break
+                    }
+                }
+            }
+            return results
+        })
+    }
+
 
     /**
      * Uses a cached biocache lookup to return the counts for the specified facet.
@@ -411,6 +540,39 @@ class MetadataService {
                     it.display = (md.name.size() > 30 && md.acronym) ? md.acronym : md.name
                 }
             }
+
+            return results
+        })
+    }
+
+    /**
+     * Get cached data for the record stats (latest record, latest image etc.)
+     * @return map
+     */
+    Map getRecordStats() {
+        log.debug 'in getRecordStats'
+        cacheService.get('recordStats', {
+            def results = [:]
+
+            def t = getTotalAndDuplicates().total
+            results.totalRecords = t
+
+            def speciesWithRecords = webService.getJson("${BIE_URL}${Constants.WebServices.PARTIAL_URL_SPECIES_RANK_WITH_RECORDS}")?.searchResults?.totalRecords
+            results.speciesWithRecords = speciesWithRecords
+
+            // latest record
+            def b = webService.getJson("${BIO_CACHE_URL}${Constants.WebServices.PARTIAL_URL_DATE_STATS_LATEST_RECORD}")
+            def latestUuid = b.occurrences[0].uuid
+            def latest = new Date(b.occurrences[0].eventDate)
+            def latestDate = new SimpleDateFormat("d MMMM yyyy").format(latest)
+            results.latest = [uuid: latestUuid, display: latestDate]
+
+            // latest record with image
+            def bi = webService.getJson("${BIO_CACHE_URL}${Constants.WebServices.PARTIAL_URL_DATE_STATS_LATEST_RECORD_WITH_IMAGE}")
+            def latestImageUuid = bi.occurrences[0].uuid
+            def latestImage = new Date(bi.occurrences[0].eventDate)
+            def latestImageDate = new SimpleDateFormat("d MMMM yyyy").format(latestImage)
+            results.latestImage = [uuid: latestImageUuid, display: latestImageDate]
 
             return results
         })
@@ -866,7 +1028,7 @@ class MetadataService {
             def acceptedNames = webService.getJson("${BIE_URL}${Constants.WebServices.PARTIAL_URL_ACCEPTED_NAMES}")?.searchResults?.totalRecords
             def synonymNames = webService.getJson("${BIE_URL}${Constants.WebServices.PARTIAL_URL_SYNONYMS}")?.searchResults?.totalRecords
             def acceptedSpeciesNames = webService.getJson("${BIE_URL}${Constants.WebServices.PARTIAL_URL_SPECIES_NAMES}")?.searchResults?.totalRecords
-            def speciesWithRecords = webService.getJson("${BIE_URL}${Constants.WebServices.PARTIAL_URL_SPECIES_WITH_RECORDS}")?.searchResults?.totalRecords
+            def speciesWithRecords = webService.getJson("${BIE_URL}${Constants.WebServices.PARTIAL_URL_SPECIES_RANK_WITH_RECORDS}")?.searchResults?.totalRecords
 
             def taxaCounts = [acceptedNames       : acceptedNames,
                               synonymNames        : synonymNames,

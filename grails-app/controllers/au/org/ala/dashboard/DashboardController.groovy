@@ -34,11 +34,11 @@ class DashboardController {
     }
 
     def recordsPanel = {
-        render view: 'panels/recordsPanel', model: [totalRecords: metadataService.getTotalAndDuplicates()]
+        render view: 'panels/recordsPanel_nbn', model: [recordStats: metadataService.getRecordStats()]
     }
 
     def datasetsPanel = {
-        render view: 'panels/datasetsPanel', model: [datasets: metadataService.getDatasets()]
+        render view: 'panels/datasetsPanel_nbn', model: [datasets: metadataService.getDatasets()]
     }
 
     def basisRecordsPanel = {
@@ -59,6 +59,18 @@ class DashboardController {
 
     def statePanel = {
         render view: 'panels/statePanel', model: []
+    }
+
+    def identificationVerificationStatusPanel = {
+        render view: 'panels/recordsByIdentificationVerificationStatusPanel', model: [identificationVerificationStatus : metadataService.getRecordsByIdentificationVerificationStatus() ]
+    }
+
+    def licencePanel = {
+        render view: 'panels/licencePanel', model: []
+    }
+
+    def coordinateUncertaintyPanel = {
+        render view: 'panels/recordsByCoordinateUncertaintyPanel', model: [coordinateUncertainty : metadataService.getRecordsByCoordinateUncertainty() ]
     }
 
     def identifyLifePanel = {
@@ -134,6 +146,10 @@ class DashboardController {
     def mostRecorded(String group) {
         def facets = metadataService.getMostRecordedSpecies(group)
         render facets as JSON
+    }
+
+    def userPanel = {
+        render view: 'panels/userPanel', model: [accounts: metadataService.getUserCounts()]
     }
     
     /**
@@ -294,8 +310,8 @@ class DashboardController {
         // build output
         def d = [
                 totalRecords: metadataService.getTotalAndDuplicates().findAll({it.key != 'error'}),
-                basisOfRecord: facetCount('basis_of_record'),
-                collections: metadataService.getCollectionsByCategory(),
+                //basisOfRecord: facetCount('basis_of_record'), //sr removed
+                //collections: metadataService.getCollectionsByCategory(), //SR removed
                 datasets: metadataService.getDatasets(),
                 recordsByDataProvider:
                         metadataService.getDataProviders().collectEntries {[it.display, it.count]},
@@ -304,10 +320,11 @@ class DashboardController {
                 recordsByDate: metadataService.getDateStats(),
                 recordsByState: facetCount('state'),
                 recordsByKingdom: facetCount('kingdom'),
-                recordsByConservationStatus: facetCount('state_conservation'),
+                recordsByIddentificationVerificationStatus: facetCount('identificationVerificationStatus'), //SR added
+                //recordsByConservationStatus: facetCount('state_conservation'), //SR removed
                 byDecade: metadataService.getSpeciesByDecade(),
                 recordsByLifeform: facetCount('species_group'),
-                spatialLayers: metadataService.getSpatialLayers(),
+                //spatialLayers: metadataService.getSpatialLayers(), //SR removed
                 typeCounts: metadataService.getTypeStats(),
                 taxaCounts: metadataService.getTaxaCounts(),
                 //bhlCounts: metadataService.getBHLCounts(), //RR removed

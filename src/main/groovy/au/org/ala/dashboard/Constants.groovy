@@ -20,7 +20,8 @@ class Constants {
         final static String PARTIAL_URL_DATE_STATS_LATEST_RECORD = "/occurrences/search?q=!assertions:invalidCollectionDate&pageSize=1&sort=occurrence_date&dir=desc&facet=off"
 
         //final static String PARTIAL_URL_DATE_STATS_LATEST_RECORD_WITH_IMAGE = "/ws/occurrences/search?q=!assertions:invalidCollectionDate%20AND%20occurrence_date:%5B*%20TO%20*%5D&pageSize=1&sort=first_loaded_date&dir=desc&facet=off&fq=multimedia:Image"
-        final static String PARTIAL_URL_DATE_STATS_LATEST_RECORD_WITH_IMAGE = "/occurrences/search?q=!assertions:invalidCollectionDate%20AND%20occurrence_date:%5B*%20TO%20*%5D&pageSize=1&sort=first_loaded_date&dir=desc&facet=off&fq=multimedia:Image"
+        //final static String PARTIAL_URL_DATE_STATS_LATEST_RECORD_WITH_IMAGE = "/occurrences/search?q=!assertions:invalidCollectionDate%20AND%20occurrence_date:%5B*%20TO%20*%5D&pageSize=1&sort=first_loaded_date&dir=desc&facet=off&fq=multimedia:Image" //SR for NBN
+        final static String PARTIAL_URL_DATE_STATS_LATEST_RECORD_WITH_IMAGE = "/occurrences/search?q=!assertions:invalidEventDate%20AND%20occurrence_date:%5B*%20TO%20*%5D&pageSize=1&sort=occurrence_date&dir=desc&facet=off&fq=multimedia:Image"
 
         //final static String PARTIAL_URL_DATASETS_CONTAIN_DATA = "/ws/occurrence/facets?q=*:*&facets=data_resource_uid&flimit=0"
         final static String PARTIAL_URL_DATASETS_CONTAIN_DATA = "/occurrence/facets?q=*:*&facets=data_resource_uid&flimit=0"
@@ -35,6 +36,8 @@ class Constants {
         final static String PARTIAL_URL_COLLECTION_COUNT = "/ws/collection/count"
 
         final static String PARTIAL_URL_COUNT_DATASETS_BY_TYPE = "/ws/dataResource/count/resourceType?public=true"
+
+        final static String PARTIAL_URL_COUNT_DATASETS_BY_LICENSE_TYPE = "/ws/dataResource/count/licenseType?public=true" //added SR for NBN
 
         //final static String PARTIAL_URL_SPECIES_BY_CONSERVATION_STATUS= "/ws/explore/groups.json?pageSize=10&q=state_conservation:"
         final static String PARTIAL_URL_SPECIES_BY_CONSERVATION_STATUS= "/explore/groups.json?pageSize=10&q=state_conservation:"
@@ -82,6 +85,6 @@ class Constants {
         final
         static String PARTIAL_URL_SPECIES_WITH_RECORDS = "/ws/search?q=(taxonomicStatus:accepted%20OR%20taxonomicStatus:inferredAccepted)&fq=idxtype:TAXON&fq=rankID:7000&fq=occurrenceCount:%5B0%20TO%20*%5D"
 
-
+        final static String PARTIAL_URL_SPECIES_RANK_WITH_RECORDS = "/search?q=&fq=rankID:7000&fq=taxonomicStatus:accepted&fq=occurrenceCount:[1%20TO%20*]&rows=0"
     }
 }
