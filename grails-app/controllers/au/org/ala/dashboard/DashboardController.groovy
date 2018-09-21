@@ -70,7 +70,7 @@ class DashboardController {
     }
 
     def coordinateUncertaintyPanel = {
-        render view: 'panels/recordsByCoordinateUncertaintyPanel', model: [coordinateUncertainty : metadataService.getRecordsByCoordinateUncertainty() ]
+        render view: 'panels/recordsByCoordinateUnCertaintyPanel', model: [coordinateUncertainty : metadataService.getRecordsByCoordinateUncertainty() ]
     }
 
     def identifyLifePanel = {
