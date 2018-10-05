@@ -62,7 +62,7 @@ class DashboardController {
     }
 
     def identificationVerificationStatusPanel = {
-        render view: 'panels/recordsByIdentificationVerificationStatusPanel', model: [identificationVerificationStatus : metadataService.getRecordsByIdentificationVerificationStatus() ]
+        render view: 'panels/recordsByIdentificationVerificationStatusPanel', model: []
     }
 
     def licencePanel = {
@@ -70,7 +70,7 @@ class DashboardController {
     }
 
     def coordinateUncertaintyPanel = {
-        render view: 'panels/recordsByCoordinateUncertaintyPanel', model: [coordinateUncertainty : metadataService.getRecordsByCoordinateUncertainty() ]
+        render view: 'panels/recordsByCoordinateUncertaintyPanel', model: []
     }
 
     def identifyLifePanel = {
@@ -186,7 +186,7 @@ class DashboardController {
         writeCsvFile('total-records', metadataService.getTotalAndDuplicates().findAll({it.key != 'error'}), [])
 
         // basis of record
-        writeCsvFile('basis-of-record', facetCount('basis_of_record'), ['basisOfRecord','number of records'])
+        //writeCsvFile('basis-of-record', facetCount('basis_of_record'), ['basisOfRecord','number of records'])
 
         // records by state
         recordsBy('state')
@@ -194,21 +194,29 @@ class DashboardController {
         // records by kingdom
         recordsBy('kingdom')
 
-        recordsBy('state_conservation')
+        //recordsBy('state_conservation')
+
+        recordsBy('identification_verification_status')
+
+        recordsBy('license')
 
         recordsByOtherName('species_group','lifeform')
 
+        writeCsvFile('resolution', metadataService.getRecordsByCoordinateUncertainty().collect { record ->
+                    [record.getKey(), record.getValue()] },
+                ['resolution (m)','number of records'])
+
         // collections
-        writeCsvFile('collections', metadataService.getCollectionsByCategory(), ['category','number of collections'])
+        //writeCsvFile('collections', metadataService.getCollectionsByCategory(), ['category','number of collections'])
 
         // data providers
-        writeCsvFile('data-providers', metadataService.getDataProviders().collectEntries {[it.name, it.count]},
+        writeCsvFile('data-providers', metadataService.getDataProviders().collect {[it.facet, it.count]},
                 ['data provider','number of records'])
 
         // spatial layers
-        def md = metadataService.getSpatialLayers()
-        def spMap = [Total: md.total] + md.groups + md.classification
-        writeCsvFile('spatial-layers', spMap, ['type','number'])
+       // def md = metadataService.getSpatialLayers()
+       // def spMap = [Total: md.total] + md.groups + md.classification
+       // writeCsvFile('spatial-layers', spMap, ['type','number'])
 
         // datasets
         def ds = metadataService.getDatasets()
@@ -222,39 +230,40 @@ class DashboardController {
         writeCsvFile('records-by-century', rcList, ['century','number'])
 
         // records for types
-        def ty = metadataService.getTypeStats()
-        def tyList = ty.collectEntries { k,v ->
-            if (k == 'withImage') {
-                v.collectEntries { l,w -> [(l + ' (with image)'): w]}
-            }
-            else {
-                ["${k}": v]
-            }
-        }
-        writeCsvFile('type-status', tyList, ['type status', 'number'])
+        //def ty = metadataService.getTypeStats()
+        //def tyList = ty.collectEntries { k,v ->
+        //    if (k == 'withImage') {
+        //        v.collectEntries { l,w -> [(l + ' (with image)'): w]}
+        //    }
+        //    else {
+         //       ["${k}": v]
+         //   }
+        //}
+        //writeCsvFile('type-status', tyList, ['type status', 'number'])
 
         // taxa counts
-        writeCsvFile('names', metadataService.getTaxaCounts(), [])
+        // SR removed
+        //writeCsvFile('names', metadataService.getTaxaCounts(), [])
 
         // bhl counts
         //RR removed
         //writeCsvFile('biodiversity-heritage-library', metadataService.getBHLCounts(), [])
 
         // identify life counts
-        writeCsvFile('identify-life', metadataService.getIdentifyLifeCounts(), [])
+        //writeCsvFile('identify-life', metadataService.getIdentifyLifeCounts(), [])
 
         // vp counts
-        writeCsvFile('biodiversity-volunteer-portal', metadataService.get('volunteerPortalCounts'), [])
+        //writeCsvFile('biodiversity-volunteer-portal', metadataService.get('volunteerPortalCounts'), [])
 
         /* zip files */
         //new AntBuilder().zip(destfile: '/data/dashboard/zip/dashboard.zip', basedir: '/data/dashboard/csv/', includes: '**/*.csv')
-        new AntBuilder().zip(destfile: './grails-app/data/dashboard/zip/dashboard.zip', basedir: './grails-app/data/dashboard/csv/', includes: '**/*.csv') //RR foce
+        new AntBuilder().zip(destfile: grailsApplication.config.csv.temp.dir + 'dashboard.zip', basedir: grailsApplication.config.csv.temp.dir, includes: '**/*.csv') //RR foce
 
 
         /* render zip */
         response.setHeader("Content-disposition", "attachment; filename=dashboard.zip");
         //byte[] zip = new File('/data/dashboard/zip/dashboard.zip').bytes
-        byte[] zip = new File('./grails-app/data/dashboard/zip/dashboard.zip').bytes //RR
+        byte[] zip = new File(grailsApplication.config.csv.temp.dir + 'dashboard.zip').bytes //RR
         response.contentType = "application/zip"
         response.outputStream << zip
     }
@@ -320,12 +329,14 @@ class DashboardController {
                 recordsByDate: metadataService.getDateStats(),
                 recordsByState: facetCount('state'),
                 recordsByKingdom: facetCount('kingdom'),
-                recordsByIddentificationVerificationStatus: facetCount('identificationVerificationStatus'), //SR added
+                recordsByIdentificationVerificationStatus: facetCount('identification_verification_status'), //SR added
+                recordsByLicence: facetCount('license'), //SR added
+                recordsByResolution: metadataService.getRecordsByCoordinateUncertainty(), //SR added
                 //recordsByConservationStatus: facetCount('state_conservation'), //SR removed
                 byDecade: metadataService.getSpeciesByDecade(),
                 recordsByLifeform: facetCount('species_group'),
                 //spatialLayers: metadataService.getSpatialLayers(), //SR removed
-                typeCounts: metadataService.getTypeStats(),
+                //typeCounts: metadataService.getTypeStats(),
                 taxaCounts: metadataService.getTaxaCounts(),
                 //bhlCounts: metadataService.getBHLCounts(), //RR removed
                 //volunteerPortalCounts: metadataService.getVolunteerStats(), //RR removed

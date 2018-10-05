@@ -495,7 +495,7 @@ class MetadataService {
             def results = getBiocacheFacet('data_provider_uid')?.facets
 
             // get metadata for name and acronym
-            def dpMetadata = JSON.parse(new URL("${COLLECTORY_URL}/lookup/dataProvider").text)
+            def dpMetadata = JSON.parse(new URL("${COLLECTORY_URL}/ws/dataProvider").text)
             def dpMap = [:]
             dpMetadata.each() {
                 dpMap.put it.uid, [acronym: it.acronym, name: it.name, uri: it.uri]

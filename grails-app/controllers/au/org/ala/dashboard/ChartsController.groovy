@@ -56,4 +56,24 @@ class ChartsController {
 
         [columns: columns, data: data]
     }
+
+    def coordinateUncertaintyRecords() {
+        Map coordinateUncertaintyRecords = metadataService.getRecordsByCoordinateUncertainty()
+        def columns = [['string', 'Resolution'], ['number', 'Records']]
+        def data = coordinateUncertaintyRecords.collect { record ->
+            [record.getKey(), record.getValue()]
+        }
+
+        [columns: columns, data: data]
+    }
+
+    def identificationVerificationRecords() {
+        Map identificationVerification = metadataService.getRecordsByIdentificationVerificationStatus()
+        def columns = [['string', 'Status'], ['number', 'Records']]
+        def data = identificationVerification.facets.collect { facet ->
+            [facet.display, facet.count]
+        }
+
+        [columns: columns, data: data]
+    }
 }

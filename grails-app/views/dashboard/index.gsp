@@ -38,6 +38,8 @@
 
         <g:include controller="dashboard" action="datasetsPanel"/>
 
+        <g:include controller="dashboard" action="statePanel"/>
+
         %{--<g:include controller="dashboard" action="basisRecordsPanel"/>--}%
 
         %{--<g:include controller="dashboard" action="collectionPanel"/>--}%
@@ -53,8 +55,6 @@
         %{--<g:include controller="dashboard" action="nslPanel"/>--}%
 
         %{--<g:include controller="dashboard" action="spatialPanel"/>--}%
-
-        <g:include controller="dashboard" action="statePanel"/>
 
         %{--<g:include controller="dashboard" action="identifyLifePanel"/>--}%
 
