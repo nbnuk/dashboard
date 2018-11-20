@@ -33,11 +33,14 @@ repositories {
     maven { url "https://repo.grails.org/grails/core" }
 }
 
-/*grails {
-    plugins {
-         compile project(':ala-bootstrap3')
+boolean inplace = true
+if (inplace) {
+    grails {
+        plugins {
+            compile project(':ala-bootstrap3')
+        }
     }
-} */
+}
 
 dependencies {
     compile "org.springframework.boot:spring-boot-starter-logging"

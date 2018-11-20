@@ -151,7 +151,7 @@ class DashboardController {
     def userPanel = {
         render view: 'panels/userPanel', model: [accounts: metadataService.getUserCounts()]
     }
-    
+
     /**
      * Do logouts through this app so we can invalidate the session.
      *
