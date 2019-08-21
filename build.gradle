@@ -33,7 +33,7 @@ repositories {
     maven { url "https://repo.grails.org/grails/core" }
 }
 
-boolean inplace = true
+boolean inplace = false
 if (inplace) {
     grails {
         plugins {
